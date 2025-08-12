@@ -12,10 +12,6 @@ The evaluation system operates in two main modes:
 
 **Execution Result Mode**: Directly compares CSV result files with gold standards
 
-#### Sqlite Database Link
-
-* [spider2-localdb.zip](https://shorthillstech-my.sharepoint.com/:u:/g/personal/aman_shorthills_ai/EbLcIHjnYydGh1_7pzP1UBMBNiHkAG7i-4CBfnHT6zN0iw?e=bj99yM)
-
 ## Core Components
 
 ### 1. Column Normalization System

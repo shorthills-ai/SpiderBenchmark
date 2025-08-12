@@ -39,6 +39,7 @@ spider2-lite/resource/databases/local/*.db
 spider2-lite/resource/databases/local/*.sqlite
 
 !spider2-lite/evaluation_suite/README.md
+!spider2-lite/evaluation_suite/README_V2.md
 !spider2-lite/evaluation_suite/gold/
 !spider2-lite/evaluation_suite/gold-1108/
 !spider2-lite/evaluation_suite/gold-1104/
@@ -46,6 +47,7 @@ spider2-lite/resource/databases/local/*.sqlite
 !spider2-lite/evaluation_suite/gold/sql/bq002.sql
 !spider2-lite/evaluation_suite/gold/spider2lite_eval.jsonl
 !spider2-lite/evaluation_suite/evaluate.py
+!spider2-lite/evaluation_suite/evaluate_v2.py
 !spider2-lite/evaluation_suite/evaluate_yx.py
 !spider2-lite/evaluation_suite/evaluate_utils.py
 !spider2-lite/evaluation_suite/spider2sql_eval_config_file.py
