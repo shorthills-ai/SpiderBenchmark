@@ -451,6 +451,106 @@
 {"instance_id": "local075", "db": "bank_sales_trading", "question": "Can you provide a breakdown of how many times each product was viewed, how many times they were added to the shopping cart, and how many times they were left in the cart without being purchased? Also, give me the count of actual purchases for each product. Ensure that products with a page id in (1, 2, 12, 13) are filtered out.", "external_knowledge": null}
 {"instance_id": "local077", "db": "bank_sales_trading", "question": "Please analyze our interest data from September 2018 to August 2019. For each month, calculate the average composition for each interest by dividing the composition by the index value. Identify the interest with the highest average composition value each month and report its average composition as the max index composition for that month. Compute the three-month rolling average of these monthly max index compositions. Ensure the output includes the date, the interest name, the max index composition for that month, the rolling average, and the names and max index compositions of the top interests from one month ago and two months ago.", "external_knowledge": null}
 {"instance_id": "local078", "db": "bank_sales_trading", "question": "Identify the top 10 and bottom 10 interest categories based on their highest composition values across all months. For each category, display the time(MM-YYYY), interest name, and the composition value", "external_knowledge": null}
+{"instance_id": "local457", "db": "bank_sales_trading", "question": "List all weekly sales records", "external_knowledge": null}
+{"instance_id": "local458", "db": "bank_sales_trading", "question": "Show total sales by region", "external_knowledge": null}
+{"instance_id": "local459", "db": "bank_sales_trading", "question": "Find the platform with highest total transactions", "external_knowledge": null}
+{"instance_id": "local460", "db": "bank_sales_trading", "question": "Show sales by customer type for Retail segment", "external_knowledge": null}
+{"instance_id": "local461", "db": "bank_sales_trading", "question": "Average sales per transaction by region", "external_knowledge": null}
+{"instance_id": "local462", "db": "bank_sales_trading", "question": "List distinct platforms in weekly sales", "external_knowledge": null}
+{"instance_id": "local463", "db": "bank_sales_trading", "question": "Weekly sales and transactions for USA region", "external_knowledge": null}
+{"instance_id": "local464", "db": "bank_sales_trading", "question": "Week dates and sales where sales exceed 10000", "external_knowledge": null}
+{"instance_id": "local465", "db": "bank_sales_trading", "question": "Count distinct regions in weekly sales", "external_knowledge": null}
+{"instance_id": "local466", "db": "bank_sales_trading", "question": "Running total of sales by region over time", "external_knowledge": null}
+{"instance_id": "local467", "db": "bank_sales_trading", "question": "Top three platforms by transactions within each region", "external_knowledge": null}
+{"instance_id": "local468", "db": "bank_sales_trading", "question": "Total sales by platform and segment", "external_knowledge": null}
+{"instance_id": "local469", "db": "bank_sales_trading", "question": "Regions with above average sales", "external_knowledge": null}
+{"instance_id": "local470", "db": "bank_sales_trading", "question": "Regions present in both weekly sales and bitcoin members", "external_knowledge": null}
+{"instance_id": "local471", "db": "bank_sales_trading", "question": "Percentage of total sales by region", "external_knowledge": null}
+{"instance_id": "local472", "db": "bank_sales_trading", "question": "List all cleaned weekly sales records for Youth demographic", "external_knowledge": null}
+{"instance_id": "local473", "db": "bank_sales_trading", "question": "Monthly sales totals for calendar year 2023", "external_knowledge": null}
+{"instance_id": "local474", "db": "bank_sales_trading", "question": "Total sales by calendar year in cleaned weekly sales", "external_knowledge": null}
+{"instance_id": "local475", "db": "bank_sales_trading", "question": "Average transaction by age band", "external_knowledge": null}
+{"instance_id": "local476", "db": "bank_sales_trading", "question": "Sales by demographic ordered descending", "external_knowledge": null}
+{"instance_id": "local477", "db": "bank_sales_trading", "question": "Top week by sales in 2023 from cleaned weekly sales", "external_knowledge": null}
+{"instance_id": "local478", "db": "bank_sales_trading", "question": "Join weekly and cleaned weekly sales by week date", "external_knowledge": null}
+{"instance_id": "local479", "db": "bank_sales_trading", "question": "Average sales per transaction by region in cleaned weekly sales", "external_knowledge": null}
+{"instance_id": "local480", "db": "bank_sales_trading", "question": "Sales by age band and demographic combination", "external_knowledge": null}
+{"instance_id": "local481", "db": "bank_sales_trading", "question": "Seasonal average sales using month number", "external_knowledge": null}
+{"instance_id": "local482", "db": "bank_sales_trading", "question": "List all shopping cart users who started on 2025 01 01", "external_knowledge": null}
+{"instance_id": "local483", "db": "bank_sales_trading", "question": "Count distinct users in shopping cart users", "external_knowledge": null}
+{"instance_id": "local484", "db": "bank_sales_trading", "question": "First 10 users with start dates", "external_knowledge": null}
+{"instance_id": "local485", "db": "bank_sales_trading", "question": "Average days from start to first event", "external_knowledge": null}
+{"instance_id": "local486", "db": "bank_sales_trading", "question": "All page view events ordered by event time", "external_knowledge": null}
+{"instance_id": "local487", "db": "bank_sales_trading", "question": "Event counts by type with names", "external_knowledge": null}
+{"instance_id": "local488", "db": "bank_sales_trading", "question": "Most visited page by name", "external_knowledge": null}
+{"instance_id": "local489", "db": "bank_sales_trading", "question": "Total visits per shopping cart page", "external_knowledge": null}
+{"instance_id": "local490", "db": "bank_sales_trading", "question": "Pages under Checkout product category", "external_knowledge": null}
+{"instance_id": "local491", "db": "bank_sales_trading", "question": "Users who added items to cart using event name", "external_knowledge": null}
+{"instance_id": "local492", "db": "bank_sales_trading", "question": "Sequence of events for a visit abc 123", "external_knowledge": null}
+{"instance_id": "local493", "db": "bank_sales_trading", "question": "Conversion rate from page view to add to cart", "external_knowledge": null}
+{"instance_id": "local494", "db": "bank_sales_trading", "question": "Most common event sequence of length three", "external_knowledge": null}
+{"instance_id": "local495", "db": "bank_sales_trading", "question": "Total add to cart events by campaign", "external_knowledge": null}
+{"instance_id": "local496", "db": "bank_sales_trading", "question": "List event names for event type two", "external_knowledge": null}
+{"instance_id": "local497", "db": "bank_sales_trading", "question": "Events for a specific page id 101", "external_knowledge": null}
+{"instance_id": "local498", "db": "bank_sales_trading", "question": "Page names for page id 200", "external_knowledge": null}
+{"instance_id": "local499", "db": "bank_sales_trading", "question": "List all interest metrics for May 2024", "external_knowledge": null}
+{"instance_id": "local500", "db": "bank_sales_trading", "question": "Ranking ordered by index value descending with interest id", "external_knowledge": null}
+{"instance_id": "local501", "db": "bank_sales_trading", "question": "Top five interest ids by percentile ranking", "external_knowledge": null}
+{"instance_id": "local502", "db": "bank_sales_trading", "question": "Average percentile ranking for Machine Learning", "external_knowledge": null}
+{"instance_id": "local503", "db": "bank_sales_trading", "question": "Interest with top rank in May 2023", "external_knowledge": null}
+{"instance_id": "local504", "db": "bank_sales_trading", "question": "Month over month growth rate for Data Science index value", "external_knowledge": null}
+{"instance_id": "local505", "db": "bank_sales_trading", "question": "Highest index value recorded in interest metrics", "external_knowledge": null}
+{"instance_id": "local506", "db": "bank_sales_trading", "question": "List interest map entries created after 2024 01 01", "external_knowledge": null}
+{"instance_id": "local507", "db": "bank_sales_trading", "question": "Find interests last modified before 2024 06 01", "external_knowledge": null}
+{"instance_id": "local508", "db": "bank_sales_trading", "question": "Show interest summary for Data Science", "external_knowledge": null}
+{"instance_id": "local509", "db": "bank_sales_trading", "question": "Bitcoin prices for BTC on 2024 05 01", "external_knowledge": null}
+{"instance_id": "local510", "db": "bank_sales_trading", "question": "Daily high and low prices for BTC in March 2023", "external_knowledge": null}
+{"instance_id": "local511", "db": "bank_sales_trading", "question": "Price of ETH on 2023 04 01", "external_knowledge": null}
+{"instance_id": "local512", "db": "bank_sales_trading", "question": "Bitcoin transactions for ticker BTC", "external_knowledge": null}
+{"instance_id": "local513", "db": "bank_sales_trading", "question": "Total quantity traded per bitcoin transaction type", "external_knowledge": null}
+{"instance_id": "local514", "db": "bank_sales_trading", "question": "Average percentage fee by bitcoin transaction type", "external_knowledge": null}
+{"instance_id": "local515", "db": "bank_sales_trading", "question": "Most active trading hours for bitcoin", "external_knowledge": null}
+{"instance_id": "local516", "db": "bank_sales_trading", "question": "Total BTC bought by members per region", "external_knowledge": null}
+{"instance_id": "local517", "db": "bank_sales_trading", "question": "Bitcoin member names with their BTC quantities", "external_knowledge": null}
+{"instance_id": "local518", "db": "bank_sales_trading", "question": "Bitcoin members without any transactions", "external_knowledge": null}
+{"instance_id": "local519", "db": "bank_sales_trading", "question": "Latest bitcoin prices for all tickers", "external_knowledge": null}
+{"instance_id": "local520", "db": "bank_sales_trading", "question": "Value of BTC BUY transactions on a given day", "external_knowledge": null}
+{"instance_id": "local521", "db": "bank_sales_trading", "question": "Regions with bitcoin member counts", "external_knowledge": null}
+{"instance_id": "local522", "db": "bank_sales_trading", "question": "Customers by region name from nodes and regions", "external_knowledge": null}
+{"instance_id": "local523", "db": "bank_sales_trading", "question": "Total transaction amount by customer", "external_knowledge": null}
+{"instance_id": "local524", "db": "bank_sales_trading", "question": "Transactions with negative amounts in customer transactions", "external_knowledge": null}
+{"instance_id": "local525", "db": "bank_sales_trading", "question": "Customers with transactions but no region assignment", "external_knowledge": null}
+{"instance_id": "local526", "db": "bank_sales_trading", "question": "Customer id and region name for active nodes only", "external_knowledge": null}
+{"instance_id": "local527", "db": "bank_sales_trading", "question": "Average active duration in days for customer nodes", "external_knowledge": null}
+{"instance_id": "local528", "db": "bank_sales_trading", "question": "Customers with nodes in multiple regions", "external_knowledge": null}
+{"instance_id": "local529", "db": "bank_sales_trading", "question": "Recent 30 day customer transactions", "external_knowledge": null}
+{"instance_id": "local530", "db": "bank_sales_trading", "question": "Monthly transaction counts in customer transactions", "external_knowledge": null}
+{"instance_id": "local531", "db": "bank_sales_trading", "question": "Customer transaction frequency and totals", "external_knowledge": null}
+{"instance_id": "local532", "db": "bank_sales_trading", "question": "Total records count across all tables", "external_knowledge": null}
+{"instance_id": "local533", "db": "bank_sales_trading", "question": "Vegetable transactions with quantity sold above 50", "external_knowledge": null}
+{"instance_id": "local534", "db": "bank_sales_trading", "question": "Vegetable sale records excluding returns", "external_knowledge": null}
+{"instance_id": "local535", "db": "bank_sales_trading", "question": "Vegetable transactions with discount above 20 percent", "external_knowledge": null}
+{"instance_id": "local536", "db": "bank_sales_trading", "question": "Total revenue by day of week from veg transactions", "external_knowledge": null}
+{"instance_id": "local537", "db": "bank_sales_trading", "question": "Weekend versus weekday sales totals in veg transactions", "external_knowledge": null}
+{"instance_id": "local538", "db": "bank_sales_trading", "question": "Vegetable names and quantities sold via join", "external_knowledge": null}
+{"instance_id": "local539", "db": "bank_sales_trading", "question": "Average selling price per kg by item name", "external_knowledge": null}
+{"instance_id": "local540", "db": "bank_sales_trading", "question": "Total quantity sold by vegetable category", "external_knowledge": null}
+{"instance_id": "local541", "db": "bank_sales_trading", "question": "Items with loss rate greater than five percent", "external_knowledge": null}
+{"instance_id": "local542", "db": "bank_sales_trading", "question": "Wholesale price records above twenty for veg items", "external_knowledge": null}
+{"instance_id": "local543", "db": "bank_sales_trading", "question": "Wholesale price of item 3005 on 2023 06 10", "external_knowledge": null}
+{"instance_id": "local544", "db": "bank_sales_trading", "question": "Vegetable items in Leafy Greens category", "external_knowledge": null}
+{"instance_id": "local545", "db": "bank_sales_trading", "question": "Profit margin for Tomato using txn and wholesale data", "external_knowledge": null}
+{"instance_id": "local546", "db": "bank_sales_trading", "question": "Top five most profitable vegetables considering loss and wholesale", "external_knowledge": null}
+{"instance_id": "local547", "db": "bank_sales_trading", "question": "Vegetable names and their wholesale prices", "external_knowledge": null}
+{"instance_id": "local548", "db": "bank_sales_trading", "question": "Loss rate for Potato from loss rate table", "external_knowledge": null}
+{"instance_id": "local549", "db": "bank_sales_trading", "question": "Total revenue after discounts in veg transactions", "external_knowledge": null}
+{"instance_id": "local550", "db": "bank_sales_trading", "question": "Top five most expensive veg transactions by computed revenue", "external_knowledge": null}
+{"instance_id": "local551", "db": "bank_sales_trading", "question": "List veg items by category code five", "external_knowledge": null}
+{"instance_id": "local552", "db": "bank_sales_trading", "question": "Find wholesale records for item code 101", "external_knowledge": null}
+{"instance_id": "local553", "db": "bank_sales_trading", "question": "Bitcoin member regions and total quantities traded", "external_knowledge": null}
+{"instance_id": "local554", "db": "bank_sales_trading", "question": "Customers who made both deposit and withdrawal transactions", "external_knowledge": null}
+{"instance_id": "local555", "db": "bank_sales_trading", "question": "Transactions by type for a specific customer 456", "external_knowledge": null}
+{"instance_id": "local556", "db": "bank_sales_trading", "question": "Total transaction amount for customer 123", "external_knowledge": null}
 {"instance_id": "local081", "db": "northwind", "question": "Considering only the customers who placed orders in 1998, calculate the total amount each customer spent by summing the unit price multiplied by the quantity of all products in their orders, excluding any discounts. Assign each customer to a spending group based on the customer group thresholds, and determine how many customers are in each spending group and what percentage of the total number of customers who placed orders in 1998 each group represents.", "external_knowledge": null}
 {"instance_id": "local085", "db": "northwind", "question": "Among employees who have more than 50 total orders, which three have the highest percentage of late orders, where an order is considered late if the shipped date is on or after its required date? Please list each employee's ID, the number of late orders, and the corresponding late-order percentage.", "external_knowledge": null}
 {"instance_id": "local096", "db": "Db-IMDB", "question": "For each year, calculate the percentage of films that had exclusively female actors (meaning no male actors and no actors with unknown/unspecified gender). Consider actors with gender marked as 'Male' or 'None' as non-female. For the results, display the year, the total number of movies in that year, and the percentage of movies with exclusively female actors. Extract the year from the Movie.year field by taking the last 4 characters and converting to a number.", "external_knowledge": null}

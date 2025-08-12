@@ -1,0 +1,4 @@
+txn_type,txn_count
+deposit,10
+purchase,3
+withdrawal,6

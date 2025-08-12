@@ -1,0 +1,6 @@
+index,txn_date,txn_time,item_code,qty_sold(kg),unit_selling_px_rmb/kg,sale/return,discount(%),day_of_week,item_name
+579907,2022-06-09 00:00:00,09:31:57,102900011034354,160.0,5.9,sale,1,Thursday,Xianzongye (Bag) (1)
+696471,2022-10-22 00:00:00,19:38:50,102900005116530,25.0,18.0,sale,1,Saturday,Xixia Mushroom (1)
+510599,2022-02-03 00:00:00,18:53:32,102900005125808,8.014,49.6,sale,1,Thursday,Millet Pepper
+441549,2021-10-15 00:00:00,11:22:31,102900005116530,15.0,19.8,sale,1,Friday,Xixia Mushroom (1)
+869901,2023-06-16 00:00:00,15:45:00,106972776821582,30.0,6.8,sale,1,Friday,Xianzongye (Bag) (3)

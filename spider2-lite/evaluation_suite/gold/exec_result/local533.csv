@@ -1,0 +1,2 @@
+index,txn_date,txn_time,item_code,qty_sold(kg),unit_selling_px_rmb/kg,sale/return,discount(%),day_of_week
+579907,2022-06-09 00:00:00,09:31:57,102900011034354,160.0,5.9,sale,1,Thursday
