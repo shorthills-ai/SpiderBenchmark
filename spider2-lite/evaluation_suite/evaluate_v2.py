@@ -42,6 +42,10 @@ import sqlite3
 from tqdm import tqdm
 import snowflake.connector
 import logging
+import time
+from openpyxl import Workbook, load_workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+from datetime import datetime
 
 import sys
 class TeeOutput:
@@ -166,6 +170,129 @@ def normalize_column_name(col) -> str:
         else:
             normalized_words.append(word)
     return ' '.join(normalized_words)
+
+def get_query_type(query: str) -> str:
+    """Determine if query is single-line or multi-line based on word count.
+    
+    Args:
+        query: SQL query string
+        
+    Returns:
+        'single-line' if <= 20 words, 'multi-line' if > 20 words
+    """
+    if not query:
+        return 'single-line'
+    # Count words in the query
+    word_count = len(query.split())
+    return 'multi-line' if word_count > 20 else 'single-line'
+
+def get_framework_name(result_dir: str) -> str:
+    """Extract framework name from result directory path.
+    
+    Args:
+        result_dir: Path to result directory
+        
+    Returns:
+        Framework name (blackbox, vanna, rlsql, databricks, or unknown)
+    """
+    if 'blackbox' in result_dir.lower():
+        return 'blackbox'
+    elif 'vanna' in result_dir.lower():
+        return 'vanna'
+    elif 'rlsql' in result_dir.lower():
+        return 'rlsql'
+    elif 'databricks' in result_dir.lower():
+        return 'databricks'
+    else:
+        # Try to extract from the last part of the path
+        parts = result_dir.rstrip('/').split('/')
+        if parts:
+            return parts[-1]
+        return 'unknown'
+
+def initialize_excel_sheet(file_path: str) -> Workbook:
+    """Initialize Excel workbook with required columns.
+    
+    Args:
+        file_path: Path to save the Excel file
+        
+    Returns:
+        Workbook object
+    """
+    if os.path.exists(file_path):
+        # Load existing workbook
+        wb = load_workbook(file_path)
+        ws = wb.active
+    else:
+        # Create new workbook
+        wb = Workbook()
+        ws = wb.active
+        
+        # Set column headers
+        headers = [
+            'instance_id',
+            'framework',
+            'database',
+            'query_type',
+            'score',
+            'column_precision',
+            'column_recall',
+            'column_f1',
+            'row_precision',
+            'row_recall', 
+            'row_f1',
+            'execution_time_seconds',
+            'number_of_retries',
+            'error_info'
+        ]
+        
+        for col, header in enumerate(headers, start=1):
+            ws.cell(row=1, column=col, value=header)
+            
+        # Save initial workbook
+        wb.save(file_path)
+    
+    return wb
+
+def append_to_excel(file_path: str, row_data: dict):
+    """Append a new row to the Excel sheet.
+    
+    Args:
+        file_path: Path to the Excel file
+        row_data: Dictionary containing row data
+    """
+    try:
+        if os.path.exists(file_path):
+            wb = load_workbook(file_path)
+        else:
+            wb = initialize_excel_sheet(file_path)
+            
+        ws = wb.active
+        
+        # Find the next empty row
+        next_row = ws.max_row + 1
+        
+        # Write data
+        ws.cell(row=next_row, column=2, value=row_data.get('instance_id', ''))
+        ws.cell(row=next_row, column=3, value=row_data.get('framework', ''))
+        ws.cell(row=next_row, column=4, value=row_data.get('database', ''))
+        ws.cell(row=next_row, column=5, value=row_data.get('query_type', ''))
+        ws.cell(row=next_row, column=6, value=row_data.get('score', 0))
+        ws.cell(row=next_row, column=7, value=row_data.get('column_precision', 0.0))
+        ws.cell(row=next_row, column=8, value=row_data.get('column_recall', 0.0))
+        ws.cell(row=next_row, column=9, value=row_data.get('column_f1', 0.0))
+        ws.cell(row=next_row, column=10, value=row_data.get('row_precision', 0.0))
+        ws.cell(row=next_row, column=11, value=row_data.get('row_recall', 0.0))
+        ws.cell(row=next_row, column=12, value=row_data.get('row_f1', 0.0))
+        ws.cell(row=next_row, column=13, value=row_data.get('execution_time_seconds', 0.0))
+        ws.cell(row=next_row, column=14, value=row_data.get('number_of_retries', 0))
+        ws.cell(row=next_row, column=15, value=row_data.get('error_info', ''))
+        
+        # Save the workbook
+        wb.save(file_path)
+        wb.close()
+    except Exception as e:
+        print(f"Error appending to Excel: {e}")
 
 def load_jsonl_to_dict(jsonl_file):
     """Load a JSONL file into a dictionary keyed by `instance_id`.
@@ -741,7 +868,7 @@ def compare_pandas_table(pred, gold, condition_cols=[], ignore_order=False, incl
         return score
 
 
-def get_bigquery_sql_result(sql_query, is_save, save_dir=None, file_name="result.csv"):
+def get_bigquery_sql_result(sql_query, is_save, save_dir=None, file_name="result.csv", max_retries=3):
     """Execute a BigQuery SQL query and optionally save results to CSV.
 
     When is_save is True, writes the full result to `save_dir/file_name`. When
@@ -752,52 +879,66 @@ def get_bigquery_sql_result(sql_query, is_save, save_dir=None, file_name="result
         is_save: Whether to save the results to CSV.
         save_dir: Output directory for CSV when is_save is True.
         file_name: Output CSV filename.
+        max_retries: Maximum number of retry attempts.
 
     Returns:
-        Tuple[bool, Optional[str]]: (success_flag, error_message)
+        Tuple[bool, Optional[str], float, int]: (success_flag, error_message, execution_time, retry_count)
     """
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "bigquery_credential.json"
     client = bigquery.Client()
 
-
-    try:
-        query_job = client.query(sql_query)
-        results = query_job.result().to_dataframe() 
-        total_bytes_processed = query_job.total_bytes_processed
-        gb_processed = total_bytes_processed / (1024 ** 3)
-        print(f"GB processed: {gb_processed:.5f} GB")
-        global TOTAL_GB_PROCESSED
-        TOTAL_GB_PROCESSED += gb_processed
-        print(f"Total GB processed: {TOTAL_GB_PROCESSED:.5f} GB")
+    retry_count = 0
+    execution_time = 0.0
+    last_error = None
+    
+    for attempt in range(max_retries):
+        retry_count = attempt + 1
+        start_time = time.time()
         
-         
-        
-        if results.empty:
-            print("No data found for the specified query.")
-            results.to_csv(os.path.join(save_dir, file_name), index=False)
-            return False, None
-        else:
-            if is_save:
+        try:
+            query_job = client.query(sql_query)
+            results = query_job.result().to_dataframe() 
+            execution_time = time.time() - start_time
+            
+            total_bytes_processed = query_job.total_bytes_processed
+            gb_processed = total_bytes_processed / (1024 ** 3)
+            print(f"GB processed: {gb_processed:.5f} GB")
+            global TOTAL_GB_PROCESSED
+            TOTAL_GB_PROCESSED += gb_processed
+            print(f"Total GB processed: {TOTAL_GB_PROCESSED:.5f} GB")
+            
+            if results.empty:
+                print("No data found for the specified query.")
                 results.to_csv(os.path.join(save_dir, file_name), index=False)
-                return True, None
+                return False, "No data found", execution_time, retry_count
             else:
-                value = results.iat[0, 0]
-                return True, None
-    except Exception as e:
-        # Log exception with context
-        log_exception(
-            "BigQuery execution error",
-            {
-                "file_name": file_name,
-                "save_dir": save_dir,
-                "is_save": is_save,
-            }
-        )
-        return False, str(e)
-    return True, None
+                if is_save:
+                    results.to_csv(os.path.join(save_dir, file_name), index=False)
+                    return True, None, execution_time, retry_count
+                else:
+                    value = results.iat[0, 0]
+                    return True, None, execution_time, retry_count
+        except Exception as e:
+            execution_time = time.time() - start_time
+            last_error = str(e)
+            # Log exception with context
+            log_exception(
+                f"BigQuery execution error (attempt {retry_count})",
+                {
+                    "file_name": file_name,
+                    "save_dir": save_dir,
+                    "is_save": is_save,
+                    "attempt": retry_count,
+                }
+            )
+            if attempt < max_retries - 1:
+                print(f"Retrying BigQuery execution... (attempt {retry_count + 1})")
+                time.sleep(2)  # Wait before retry
+            
+    return False, last_error, execution_time, retry_count
 
 
-def get_snowflake_sql_result(sql_query, database_id, is_save, save_dir=None, file_name="result.csv"):
+def get_snowflake_sql_result(sql_query, database_id, is_save, save_dir=None, file_name="result.csv", max_retries=3):
     """Execute a Snowflake SQL query and optionally save results to CSV.
 
     Args:
@@ -806,44 +947,63 @@ def get_snowflake_sql_result(sql_query, database_id, is_save, save_dir=None, fil
         is_save: Whether to save the results to CSV.
         save_dir: Output directory for CSV when is_save is True.
         file_name: Output CSV filename.
+        max_retries: Maximum number of retry attempts.
 
     Returns:
-        Tuple[bool, Optional[str]]: (success_flag, error_message)
+        Tuple[bool, Optional[str], float, int]: (success_flag, error_message, execution_time, retry_count)
     """
     snowflake_credential = json.load(open('snowflake_credential.json'))
-    conn = snowflake.connector.connect(
-        database=database_id,
-        **snowflake_credential
-    )
-    cursor = conn.cursor()
     
-    try:
-        cursor.execute(sql_query)
-        results = cursor.fetchall()
-        columns = [desc[0] for desc in cursor.description]
-        df = pd.DataFrame(results, columns=columns)
-        if df.empty:
-            print("No data found for the specified query.")
-            return False, None
-        else:
-            if is_save:
-                df.to_csv(os.path.join(save_dir, file_name), index=False)
-                return True, None
-    except Exception as e:
-        # Log exception with context
-        log_exception(
-            "Snowflake execution error",
-            {
-                "database_id": database_id,
-                "file_name": file_name,
-                "save_dir": save_dir,
-                "is_save": is_save,
-            }
-        )
-        return False, str(e)
+    retry_count = 0
+    execution_time = 0.0
+    last_error = None
+    
+    for attempt in range(max_retries):
+        retry_count = attempt + 1
+        start_time = time.time()
+        
+        try:
+            conn = snowflake.connector.connect(
+                database=database_id,
+                **snowflake_credential
+            )
+            cursor = conn.cursor()
+            
+            cursor.execute(sql_query)
+            results = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description]
+            df = pd.DataFrame(results, columns=columns)
+            execution_time = time.time() - start_time
+            
+            if df.empty:
+                print("No data found for the specified query.")
+                return False, "No data found", execution_time, retry_count
+            else:
+                if is_save:
+                    df.to_csv(os.path.join(save_dir, file_name), index=False)
+                    return True, None, execution_time, retry_count
+        except Exception as e:
+            execution_time = time.time() - start_time
+            last_error = str(e)
+            # Log exception with context
+            log_exception(
+                f"Snowflake execution error (attempt {retry_count})",
+                {
+                    "database_id": database_id,
+                    "file_name": file_name,
+                    "save_dir": save_dir,
+                    "is_save": is_save,
+                    "attempt": retry_count,
+                }
+            )
+            if attempt < max_retries - 1:
+                print(f"Retrying Snowflake execution... (attempt {retry_count + 1})")
+                time.sleep(2)  # Wait before retry
+            
+    return False, last_error, execution_time, retry_count
 
 
-def get_sqlite_result(db_path, query, save_dir=None, file_name="result.csv", chunksize=500):
+def get_sqlite_result(db_path, query, save_dir=None, file_name="result.csv", chunksize=500, max_retries=3):
     """Execute a SQLite query with optional CSV output, using an in-memory copy.
 
     To avoid locking and side-effects, this function first backs up the database
@@ -856,64 +1016,68 @@ def get_sqlite_result(db_path, query, save_dir=None, file_name="result.csv", chu
         save_dir: Optional directory to save results as CSV. If None, returns a DataFrame.
         file_name: Output CSV filename when save_dir is provided.
         chunksize: Chunk size used when streaming results to CSV.
+        max_retries: Maximum number of retry attempts.
 
     Returns:
-        Tuple[bool, Union[pd.DataFrame, str, None]]:
-            (True, DataFrame) when save_dir is None and query returns data.
-            (True, None) when results are successfully written to CSV.
-            (False, error_string) when execution fails.
+        Tuple[bool, Union[pd.DataFrame, str, None], float, int]:
+            (True, DataFrame, execution_time, retry_count) when save_dir is None and query returns data.
+            (True, None, execution_time, retry_count) when results are successfully written to CSV.
+            (False, error_string, execution_time, retry_count) when execution fails.
     """
-    # print("hii1")
-    # print(f"db_path: {db_path}")
-    # print(f"query: {query}")
-    # print(f"save_dir: {save_dir}")
-    # print(f"file_name: {file_name}")
-    # print(f"chunksize: {chunksize}")
-    conn = sqlite3.connect(db_path)
-    memory_conn = sqlite3.connect(':memory:')
-
-    conn.backup(memory_conn)
-
-    try:
-        # print("hii2")
-        if save_dir:
-            if not os.path.exists(save_dir):
-                os.makedirs(save_dir)
-            for i, chunk in enumerate(pd.read_sql_query(query, memory_conn, chunksize=chunksize)):
-                # print("hii3")
-                # mode 'a' = append mode for subsequent chunks, 'w' = write mode for first chunk
-                # This handles large result sets by writing chunks sequentially to avoid memory issues
-                mode = 'a' if i > 0 else 'w'
-                # Only write header for the first chunk to avoid duplicate headers
-                header = i == 0
-                chunk.to_csv(os.path.join(save_dir, file_name), mode=mode, header=header, index=False)
-                # print("hii4")
-        else:
-            # print("hii5")
-            # This else condition handles the case when save_dir is None or False
-            # Instead of saving to a file, it reads the entire query result into a DataFrame
-            # and returns it directly for immediate use
-            df = pd.read_sql_query(query, memory_conn)
-            return True, df
-
-    except Exception as e:
-        # Log exception with context
-        log_exception(
-            "SQLite execution error",
-            {
-                "db_path": db_path,
-                "file_name": file_name,
-                "save_dir": save_dir,
-            }
-        )
-        return False, str(e)
-
-    finally:
-        # print("hii6")
-        memory_conn.close()
-        conn.close()
+    retry_count = 0
+    execution_time = 0.0
+    last_error = None
     
-    return True, None
+    for attempt in range(max_retries):
+        retry_count = attempt + 1
+        start_time = time.time()
+        
+        conn = None
+        memory_conn = None
+        
+        try:
+            conn = sqlite3.connect(db_path)
+            memory_conn = sqlite3.connect(':memory:')
+            conn.backup(memory_conn)
+            
+            if save_dir:
+                if not os.path.exists(save_dir):
+                    os.makedirs(save_dir)
+                for i, chunk in enumerate(pd.read_sql_query(query, memory_conn, chunksize=chunksize)):
+                    mode = 'a' if i > 0 else 'w'
+                    header = i == 0
+                    chunk.to_csv(os.path.join(save_dir, file_name), mode=mode, header=header, index=False)
+                execution_time = time.time() - start_time
+                return True, None, execution_time, retry_count
+            else:
+                df = pd.read_sql_query(query, memory_conn)
+                execution_time = time.time() - start_time
+                return True, df, execution_time, retry_count
+
+        except Exception as e:
+            execution_time = time.time() - start_time
+            last_error = str(e)
+            # Log exception with context
+            log_exception(
+                f"SQLite execution error (attempt {retry_count})",
+                {
+                    "db_path": db_path,
+                    "file_name": file_name,
+                    "save_dir": save_dir,
+                    "attempt": retry_count,
+                }
+            )
+            if attempt < max_retries - 1:
+                print(f"Retrying SQLite execution... (attempt {retry_count + 1})")
+                time.sleep(1)  # Wait before retry
+
+        finally:
+            if memory_conn:
+                memory_conn.close()
+            if conn:
+                conn.close()
+    
+    return False, last_error, execution_time, retry_count
 
 
 def execute_gold_sql_query(db_path, gold_sql_query, gold_sql_file_path, gold_result_dir="/Users/shtlpmac050/Documents/Spider2/fork_spider/Spider2.0-fork/spider2-lite/evaluation_suite/gold/exec_result", chunksize=500):
@@ -929,7 +1093,7 @@ def execute_gold_sql_query(db_path, gold_sql_query, gold_sql_file_path, gold_res
         chunksize: Chunk size for processing large results
         
     Returns:
-        tuple: (success_flag, error_message_or_dataframe)
+        tuple: (success_flag, error_message_or_dataframe, execution_time, retry_count)
     """
     # Extract filename from SQL file path
     sql_filename = os.path.basename(gold_sql_file_path)
@@ -943,21 +1107,21 @@ def execute_gold_sql_query(db_path, gold_sql_query, gold_sql_file_path, gold_res
         # Read and return the existing CSV
         try:
             df = pd.read_csv(csv_path)
-            return True, df
+            return True, df, 0.0, 0
         except Exception as e:
             print(f"Error reading existing CSV {csv_filename}: {e}")
-            return False, str(e)
+            return False, str(e), 0.0, 0
     
     # Execute the query and save results
     print(f"Executing gold query for {sql_filename}...")
-    success, result = get_sqlite_result(db_path, gold_sql_query, gold_result_dir, csv_filename, chunksize)
+    success, result, exec_time, retries = get_sqlite_result(db_path, gold_sql_query, gold_result_dir, csv_filename, chunksize)
     
     if success:
         print(f"Successfully executed and saved gold results to {csv_filename}")
     else:
         print(f"Failed to execute gold query for {sql_filename}: {result}")
     
-    return success, result
+    return success, result, exec_time, retries
 
 
 def evaluate_spider2sql(args):
@@ -1002,17 +1166,33 @@ def evaluate_spider2sql(args):
     eval_ids = sorted(eval_ids)
     output_results = []
     
+    # Initialize Excel file for tracking results
+    framework_name = get_framework_name(pred_result_dir)
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    excel_file_path = f"{pred_result_dir}-evaluation-{timestamp}.xlsx"
+    initialize_excel_sheet(excel_file_path)
+    print(f"Initialized Excel tracking file: {excel_file_path}")
     
     for id in tqdm(eval_ids):
         # print(f">>>Evaluating {id}...")
         error_info = None
         column_metrics = None  # Initialize column metrics for each iteration
         row_metrics = None  # Initialize row metrics for each iteration
+        execution_time = 0.0
+        retry_count = 0
+        database_name = ""
+        score = 0  # Initialize score
+        pred_sql_query = ""  # Initialize pred_sql_query
+        query_type = "unknown"  # Initialize query_type
+        
         if mode == "sql":
             # print(f"pred_result_dir: {pred_result_dir}")
             pred_sql_query = open(os.path.join(pred_result_dir, f"{id}.sql")).read()
+            query_type = get_query_type(pred_sql_query)
+            
             if id.startswith("bq") or id.startswith("ga"):
-                exe_flag, dbms_error_info = get_bigquery_sql_result(pred_sql_query, True, "temp", f"{id}.csv")  
+                database_name = "BigQuery"
+                exe_flag, dbms_error_info, execution_time, retry_count = get_bigquery_sql_result(pred_sql_query, True, "temp", f"{id}.csv")  
                 if exe_flag == False: 
                     score = 0
                     error_info = dbms_error_info
@@ -1047,6 +1227,7 @@ def evaluate_spider2sql(args):
                             error_info = 'Result Error'
 
             elif id.startswith("local"):
+                database_name = f"SQLite ({spider2sql_metadata.get(id)['db']})"
                 # First, execute the gold SQL query if its result doesn't exist
                 gold_sql_file_path = os.path.join(gold_sql_dir, f"{id}.sql")
                 if os.path.exists(gold_sql_file_path):
@@ -1057,7 +1238,7 @@ def evaluate_spider2sql(args):
                     execute_gold_sql_query(db_path, gold_sql_query, gold_sql_file_path, gold_result_dir)
                 
                 # Now execute the predicted SQL query
-                exe_flag, dbms_error_info = get_sqlite_result(f"resource/databases/spider2-localdb/{spider2sql_metadata.get(id)['db']}.sqlite", pred_sql_query, "temp", f"{id}.csv" )
+                exe_flag, dbms_error_info, execution_time, retry_count = get_sqlite_result(f"resource/databases/spider2-localdb/{spider2sql_metadata.get(id)['db']}.sqlite", pred_sql_query, "temp", f"{id}.csv" )
                 # print("hii7")
                 # print(f"exe_flag: {exe_flag}")
                 # print(f"dbms_error_info: {dbms_error_info}")
@@ -1096,7 +1277,8 @@ def evaluate_spider2sql(args):
                             error_info = 'Result Error'
             elif id.startswith("sf"):
                 database_id = spider2sql_metadata[id]['db']
-                exe_flag, dbms_error_info = get_snowflake_sql_result(pred_sql_query, database_id, True, "temp", f"{id}.csv") 
+                database_name = f"Snowflake ({database_id})"
+                exe_flag, dbms_error_info, execution_time, retry_count = get_snowflake_sql_result(pred_sql_query, database_id, True, "temp", f"{id}.csv") 
                 if exe_flag == False: 
                     score = 0
                     error_info = dbms_error_info
@@ -1131,6 +1313,19 @@ def evaluate_spider2sql(args):
                         if score == 0 and error_info is None:
                             error_info = 'Result Error'                        
         elif mode == "exec_result":
+            pred_sql_query = ""  # Not available in exec_result mode
+            query_type = "unknown"
+            # Determine database type based on id prefix
+            if id.startswith("bq") or id.startswith("ga"):
+                database_name = "BigQuery"
+            elif id.startswith("local"):
+                database_name = f"SQLite ({spider2sql_metadata.get(id, {}).get('db', 'unknown')})"
+            elif id.startswith("sf"):
+                database_id = spider2sql_metadata.get(id, {}).get('db', 'unknown')
+                database_name = f"Snowflake ({database_id})"
+            else:
+                database_name = "unknown"
+            
             try:
                 pred_pd = pd.read_csv(os.path.join(args.result_dir, f"{id}.csv"))
                 # print(f"pred_pd: {pred_pd}")
@@ -1186,6 +1381,25 @@ def evaluate_spider2sql(args):
                 }
             }
         )
+        
+        # Append to Excel sheet
+        excel_row_data = {
+            'instance_id': id,
+            'framework': framework_name,
+            'database': database_name,
+            'query_type': query_type if mode == "sql" else "N/A",
+            'score': score,
+            'column_precision': column_metrics['precision'] if column_metrics else 0.0,
+            'column_recall': column_metrics['recall'] if column_metrics else 0.0,
+            'column_f1': column_metrics['f1'] if column_metrics else 0.0,
+            'row_precision': row_metrics['precision'] if row_metrics else 0.0,
+            'row_recall': row_metrics['recall'] if row_metrics else 0.0,
+            'row_f1': row_metrics['f1'] if row_metrics else 0.0,
+            'execution_time_seconds': execution_time,
+            'number_of_retries': retry_count,
+            'error_info': error_info if error_info else ''
+        }
+        append_to_excel(excel_file_path, excel_row_data)
 
         
     # print({item['instance_id']: item['score'] for item in output_results if item['score']==1})  
@@ -1346,6 +1560,7 @@ def evaluate_spider2sql(args):
         json.dump(detailed_metrics_data, f, indent=2)
     
     print(f"\nDetailed column and row metrics saved to: {detailed_metrics_file}")
+    print(f"Excel evaluation report saved to: {excel_file_path}")
 
 
 

@@ -14,7 +14,7 @@ The evaluation system operates in two main modes:
 
 ## Local Sqlite
 
-*  Find the .sqlite database in - [https://github.com/shorthills-ai/SpiderBenchmark/blob/benchmark_v1/spider2-lite/README.md](), under the quickstart heading.
+* Find the .sqlite database in - [https://github.com/shorthills-ai/SpiderBenchmark/blob/benchmark_v1/spider2-lite/README.md](), under the quickstart heading.
 
 ## Core Components
 
